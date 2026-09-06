@@ -70,6 +70,7 @@ oscillometry use a loudspeaker as a calibrated pressure source. Same job, smalle
 | **Protek 125ml priming fluid** | Preps the PVC so the cement actually bonds | [Bunnings](https://www.bunnings.com.au/search/products?q=Protek+Red+Priming+Fluid) | $6.68 |
 | **Neutral-cure silicone sealant** | Seals the sensor port and anything not solvent-welded | [Bunnings](https://www.bunnings.com.au/search/products?q=neutral+cure+silicone+sealant) | $12 |
 | **Two-part epoxy** | Brushed over the printed adaptor — FDM prints leak through layer lines even when they look solid | [Bunnings](https://www.bunnings.com.au/search/products?q=two+part+epoxy+resin) | $20 |
+| **PETG or PLA filament** (~300 g) | The adaptor, from `cad/adaptor.stl` | you have this | — |
 | **Barbed fitting + silicone tube** | Connects the chamber to the pressure sensor | [Bunnings](https://www.bunnings.com.au/search/products?q=barbed+hose+fitting) | $10 |
 | **M4 bolts + closed-cell foam gasket** | Bolts the driver to the printed adaptor, gasket makes it airtight | [Bunnings](https://www.bunnings.com.au/search/products?q=M4+bolts) | $15 |
 | **60 mL syringe** | Injects a known volume for the leak test and to calibrate the sensor | [Bunnings](https://www.bunnings.com.au/search/products?q=60ml+syringe) | $5 |
@@ -175,29 +176,46 @@ adaptor between them:
 1. **Cut ~800 mm of pipe.** Cap one end. Drill the cap for the barb fitting and seal it with
    silicone — that's where the pressure sensor connects.
 
-2. **Print the adaptor plate** for the other end. Keep it **flat, not a cone**: a disc roughly
-   245 mm across and 10 mm thick, with the 182 mm driver cutout and bolt pattern on the front, and a
-   short spigot on the back that solvent-welds into the pipe socket. The bore just steps abruptly
-   from 182 mm down to 104 mm inside the plate.
+2. **Print the pipe-fit test ring first** — `cad/pipe-fit-test-ring.stl`. It's a few grams and a
+   few minutes, and it tells you whether the 110.6 mm socket actually slides onto your pipe before
+   you commit to the big print. PVC OD varies between batches. If it's tight or loose, change
+   `SOCKET_CLEARANCE` in `cad/adaptor.py` and re-run it.
 
-   A cone would look neater but adds well over a litre of dead volume. At 1 Hz the abrupt step
-   costs you nothing — the air has all the time in the world to get through.
+3. **Print the adaptor** — `cad/adaptor.stl`. 245 mm flange, 182 mm driver cutout, tapering to a
+   45 mm-deep socket that slips over the pipe. 100 mm long overall. Print it flange-down: the taper
+   sits at 38° from vertical, so it needs no support.
 
-   245 mm may not fit your print bed. Print it in halves and bond them if so.
+   245 mm fits flat on a 256 bed and diagonally on a 220. It's a chunky print — around 460 cm³
+   solid, so budget a couple of hundred grams and several hours. Drop `FLANGE_THICKNESS` to 6 mm in
+   the script if you want it lighter.
 
-3. **Epoxy the printed part.** 3D prints leak through the layer lines even when they look solid.
+   **No bolt holes.** Jaycar give the 212 mm bolt circle but not how many holes the driver has, so
+   the front face carries a shallow scribed groove at that diameter. Sit the driver on it, mark
+   through its own flange, and drill to match.
+
+4. **Epoxy the printed part.** 3D prints leak through the layer lines even when they look solid.
    Brush it and test it on its own before assembling.
 
-4. **Bolt the driver on**, cone facing into the tube, back open to the room. Foam gasket under the
+5. **Seal the socket with silicone — not PVC cement.** Solvent cement works by dissolving PVC and
+   does nothing at all to PLA or PETG. The socket is a slip fit over the pipe; run silicone into it,
+   push the pipe home, and let it cure. Solvent cement is still the right thing for the PVC-to-PVC
+   joints (cap, coupling).
+
+6. **Bolt the driver on**, cone facing into the tube, basket out in free air. Foam gasket under the
    flange.
 
-5. **Leak test before you go further.** Push some air in with a syringe and watch the pressure. It
+   That orientation isn't cosmetic. Mounted this way the funnel only has to clear the shallow dish
+   of the cone. Turned round, it would have to swallow the entire 92 mm-deep basket, and the funnel
+   would need to be far bigger.
+
+7. **Leak test before you go further.** Push some air in with a syringe and watch the pressure. It
    should hold for at least ten seconds. If it drops fast, find the leak now — a leaky tube looks
    exactly like a weak actuator, and you'll waste a weekend chasing the wrong thing.
 
-6. **Measure the real chamber volume** — don't calculate it. The adaptor cavity and the dish of the
-   cone itself add somewhere around half a litre on top of the pipe, which is ~10% of your total and
-   too much to hand-wave.
+8. **Measure the real chamber volume** — don't calculate it. The adaptor alone adds **1.03 L**, and
+   the dish of the cone adds a few hundred mL more. So 800 mm of pipe is not 6.7 L, it's closer to
+   8 L. That's a 20% error if you go by pipe length, which is more than enough to make your
+   predictions disagree with reality for no visible reason.
 
    Inject a known volume **slowly** with the syringe (slowly matters — it keeps the air isothermal)
    and read the settled pressure. Then:
