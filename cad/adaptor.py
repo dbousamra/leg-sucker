@@ -18,8 +18,16 @@ No bolt holes. Jaycar publish the 212 mm bolt circle for the CW2196 but not how 
 holes it has, so the front face carries a shallow scribed groove at that diameter —
 mark through the driver's own flange and drill to match.
 
-The pipe socket is a slip fit over the pipe OD, sealed with silicone. It is NOT
-solvent welded: PVC cement works by dissolving PVC and will not touch PLA or PETG.
+Two joint styles are generated:
+
+  adaptor-spigot.stl  (recommended) ends in a 110 mm OD spigot, the same OD as the
+                      pipe, so a Deks 100 mm rubber joiner clamps over both. Fully
+                      reversible — undo two hose clamps.
+  adaptor-socket.stl  ends in a socket that slips over the pipe, sealed with silicone.
+                      More compact, less dead volume, but fiddly to take apart.
+
+Neither can be solvent welded: PVC cement works by dissolving PVC and will not touch
+PLA or PETG.
 """
 
 import math
@@ -36,6 +44,9 @@ PIPE_OD = 110.0  # DN100 PVC DWV
 SOCKET_CLEARANCE = 0.6  # slip fit; increase if your pipe is tight
 SOCKET_DEPTH = 45.0
 SOCKET_WALL = 7.7
+
+SPIGOT_LENGTH = 45.0  # engagement inside the rubber joiner
+SPIGOT_WALL = 4.0
 
 TAPER_LENGTH = 45.0  # 182 -> pipe bore. 38 deg from vertical, prints without support
 CONE_WALL = 4.0
@@ -73,6 +84,28 @@ PROFILE = [
     (flange_r, z_flange_back),
     (flange_r, 0.0),
     # front face, with the bolt-circle scribe groove
+    (scribe_r + SCRIBE_HALF_WIDTH, 0.0),
+    (scribe_r, SCRIBE_DEPTH),
+    (scribe_r - SCRIBE_HALF_WIDTH, 0.0),
+]
+
+# Spigot variant: same flange and taper, but ends in a male stub at pipe OD so a
+# rubber joiner can clamp over it. Costs ~0.3 L more dead volume than the socket,
+# because the spigot bore is chamber rather than being filled by pipe.
+spigot_outer_r = PIPE_OD / 2.0
+spigot_bore_r = spigot_outer_r - SPIGOT_WALL
+z_spigot_end = z_taper_end + SPIGOT_LENGTH
+
+SPIGOT_PROFILE = [
+    (cutout_r, 0.0),
+    (cutout_r, z_flange_back),
+    (spigot_bore_r, z_taper_end),
+    (spigot_bore_r, z_spigot_end),
+    (spigot_outer_r, z_spigot_end),
+    (spigot_outer_r, z_taper_end),
+    (cutout_r + CONE_WALL, z_flange_back),
+    (flange_r, z_flange_back),
+    (flange_r, 0.0),
     (scribe_r + SCRIBE_HALF_WIDTH, 0.0),
     (scribe_r, SCRIBE_DEPTH),
     (scribe_r - SCRIBE_HALF_WIDTH, 0.0),
@@ -132,11 +165,11 @@ def write_stl(path, tris, header):
             f.write(struct.pack("<H", 0))
 
 
-def internal_volume_litres():
-    """Dead volume the adaptor adds to the chamber, front face to the pipe end."""
+def internal_volume_litres(end_r, straight_len=0.0):
+    """Dead volume the adaptor adds to the chamber."""
     v = math.pi * cutout_r**2 * FLANGE_THICKNESS
-    r0, r1 = cutout_r, socket_bore_r
-    v += (math.pi * TAPER_LENGTH / 3.0) * (r0 * r0 + r0 * r1 + r1 * r1)
+    v += (math.pi * TAPER_LENGTH / 3.0) * (cutout_r**2 + cutout_r * end_r + end_r**2)
+    v += math.pi * end_r**2 * straight_len
     return v / 1e6
 
 
@@ -145,18 +178,26 @@ if __name__ == "__main__":
 
     here = os.path.dirname(os.path.abspath(__file__))
 
-    body = revolve(PROFILE, SEGMENTS)
-    write_stl(os.path.join(here, "adaptor.stl"), body, "leg-sucker DN100 to 8in driver adaptor")
+    spigot = revolve(SPIGOT_PROFILE, SEGMENTS)
+    write_stl(os.path.join(here, "adaptor-spigot.stl"), spigot, "leg-sucker adaptor, spigot end")
+
+    socket = revolve(PROFILE, SEGMENTS)
+    write_stl(os.path.join(here, "adaptor-socket.stl"), socket, "leg-sucker adaptor, socket end")
 
     ring = revolve(TEST_RING_PROFILE, SEGMENTS)
     write_stl(os.path.join(here, "pipe-fit-test-ring.stl"), ring, "leg-sucker pipe fit test ring")
 
-    print(f"adaptor.stl                {len(body):>6} triangles")
-    print(f"pipe-fit-test-ring.stl     {len(ring):>6} triangles")
+    print(f"adaptor-spigot.stl      {len(spigot):>6} triangles   <- recommended")
+    print(f"adaptor-socket.stl      {len(socket):>6} triangles")
+    print(f"pipe-fit-test-ring.stl  {len(ring):>6} triangles")
     print()
     print(f"  flange              {FLANGE_OD:.1f} mm OD x {FLANGE_THICKNESS:.0f} mm")
     print(f"  driver cutout       {DRIVER_CUTOUT_D:.1f} mm")
     print(f"  bolt circle scribe  {DRIVER_BOLT_CIRCLE_D:.1f} mm")
-    print(f"  pipe socket         {socket_bore_r * 2:.1f} mm bore x {SOCKET_DEPTH:.0f} mm deep")
-    print(f"  overall length      {z_back:.1f} mm")
-    print(f"  dead volume added   {internal_volume_litres():.2f} L")
+    print()
+    print(f"  spigot   {spigot_outer_r * 2:.1f} mm OD x {SPIGOT_LENGTH:.0f} mm    "
+          f"len {z_spigot_end:.0f} mm   dead volume "
+          f"{internal_volume_litres(spigot_bore_r, SPIGOT_LENGTH):.2f} L")
+    print(f"  socket   {socket_bore_r * 2:.1f} mm bore x {SOCKET_DEPTH:.0f} mm  "
+          f"len {z_back:.0f} mm   dead volume "
+          f"{internal_volume_litres(socket_bore_r):.2f} L")

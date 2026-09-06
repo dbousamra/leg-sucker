@@ -54,7 +54,7 @@ oscillometry use a loudspeaker as a calibrated pressure source. Same job, smalle
 
 ## Bill of materials
 
-**Total ≈ AU$227** plus shipping, assuming you already have the Pi 4, a bench power supply, and the
+**Total ≈ AU$230** plus shipping, assuming you already have the Pi 4, a bench power supply, and the
 3D printer.
 
 | Item | What it's for | Where | Price |
@@ -65,7 +65,7 @@ oscillometry use a loudspeaker as a calibrated pressure source. Same job, smalle
 | **IBT-2 / BTS7960** — H-bridge motor driver | Drives the coil in both directions at frequencies an audio amp can't reach | [AliExpress](https://www.aliexpress.com/item/1005009194435701.html) | $17.29 |
 | **Holman 100mm × 3m PVC DWV pipe** | The chamber. 85 mL per cm, so 800 mm ≈ 6.7 L | [Bunnings](https://www.bunnings.com.au/holman-100mm-x-3m-pvc-dwv-pipe_p4770345) | $33.65 |
 | **Holman 100mm PVC DWV push-on cap** × 2 | Seals the far end; one gets drilled for the sensor port | [Bunnings](https://www.bunnings.com.au/search/products?q=Holman+100mm+PVC+DWV+Push+On+Cap) | $7.80 |
-| **Holman 100mm DWV repair coupling** *(optional)* | Joins sections so you can vary chamber volume. Skip it if you'd rather change volume by putting sealed bottles inside | [Bunnings](https://www.bunnings.com.au/search/products?q=Holman+100mm+DWV+PVC+Repair+Coupling) | $17.94 |
+| **Deks 100mm PVC-to-PVC rubber joiner** × 2 | **Every joint in the rig, reversibly.** A rubber sleeve with two hose clamps — joins the adaptor to the pipe, and pipe sections to each other. Undo two clamps to change the chamber volume | [Bunnings](https://www.bunnings.com.au/deks-100mm-pvc-to-pvc-rubber-joiner_p4730112) | $21.00 |
 | **Protek 250ml Type N PVC cement** | Glues pipe joints — solvent-welded joints don't leak | [Bunnings](https://www.bunnings.com.au/search/products?q=Protek+Type+N+PVC+Cement+Non+Pressure) | $8.42 |
 | **Protek 125ml priming fluid** | Preps the PVC so the cement actually bonds | [Bunnings](https://www.bunnings.com.au/search/products?q=Protek+Red+Priming+Fluid) | $6.68 |
 | **Neutral-cure silicone sealant** | Seals the sensor port and anything not solvent-welded | [Bunnings](https://www.bunnings.com.au/search/products?q=neutral+cure+silicone+sealant) | $12 |
@@ -176,33 +176,32 @@ adaptor between them:
 1. **Cut ~800 mm of pipe.** Cap one end. Drill the cap for the barb fitting and seal it with
    silicone — that's where the pressure sensor connects.
 
-2. **Print the pipe-fit test ring first** — `cad/pipe-fit-test-ring.stl`. It's a few grams and a
-   few minutes, and it tells you whether the 110.6 mm socket actually slides onto your pipe before
-   you commit to the big print. PVC OD varies between batches. If it's tight or loose, change
-   `SOCKET_CLEARANCE` in `cad/adaptor.py` and re-run it.
+2. **Print the adaptor** — `cad/adaptor-spigot.stl`. 245 mm flange, 182 mm driver cutout, tapering
+   to a 110 mm spigot that a rubber joiner clamps onto. 100 mm long. Print flange-down: the taper is
+   38° from vertical, so no support needed.
 
-3. **Print the adaptor** — `cad/adaptor.stl`. 245 mm flange, 182 mm driver cutout, tapering to a
-   45 mm-deep socket that slips over the pipe. 100 mm long overall. Print it flange-down: the taper
-   sits at 38° from vertical, so it needs no support.
-
-   245 mm fits flat on a 256 bed and diagonally on a 220. It's a chunky print — around 460 cm³
-   solid, so budget a couple of hundred grams and several hours. Drop `FLANGE_THICKNESS` to 6 mm in
-   the script if you want it lighter.
+   245 mm fits flat on a 256 bed, diagonally on a 220. It's chunky — ~460 cm³ solid, so a couple of
+   hundred grams and several hours. Drop `FLANGE_THICKNESS` to 6 mm in `cad/adaptor.py` if you want
+   it lighter.
 
    **No bolt holes.** Jaycar give the 212 mm bolt circle but not how many holes the driver has, so
-   the front face carries a shallow scribed groove at that diameter. Sit the driver on it, mark
-   through its own flange, and drill to match.
+   the front face has a shallow scribed groove at that diameter. Sit the driver on it, mark through
+   its own flange, drill to match.
 
-4. **Epoxy the printed part.** 3D prints leak through the layer lines even when they look solid.
-   Brush it and test it on its own before assembling.
+3. **Join everything with the rubber joiners — nothing here is glued.** The joiner is a rubber
+   sleeve with two hose clamps: slide it over the adaptor's spigot and the pipe, tighten both, done.
+   Undo the clamps and the whole rig comes apart.
 
-5. **Seal the socket with silicone — not PVC cement.** Solvent cement works by dissolving PVC and
-   does nothing at all to PLA or PETG. The socket is a slip fit over the pipe; run silicone into it,
-   push the pipe home, and let it cure. Solvent cement is still the right thing for the PVC-to-PVC
-   joints (cap, coupling).
+   That matters more than convenience: the test plan works by *changing the chamber volume*, so
+   pipe joints you can undo in thirty seconds are the difference between a rig you can sweep and one
+   you'd have to cut up.
 
-6. **Bolt the driver on**, cone facing into the tube, basket out in free air. Foam gasket under the
-   flange.
+4. **Check the print is gas-tight before assembling.** FDM prints can leak through the layer lines.
+   Blank off the spigot, pressurise, and see. PETG with 5+ perimeters is often fine as-is — only
+   coat it if it actually leaks, and see the note below on sealing options.
+
+5. **Bolt the driver on**, cone facing into the tube, basket out in free air. Foam gasket under the
+   flange, bolts through your drilled holes. Also reversible.
 
    That orientation isn't cosmetic. Mounted this way the funnel only has to clear the shallow dish
    of the cone. Turned round, it would have to swallow the entire 92 mm-deep basket, and the funnel
@@ -212,7 +211,7 @@ adaptor between them:
    should hold for at least ten seconds. If it drops fast, find the leak now — a leaky tube looks
    exactly like a weak actuator, and you'll waste a weekend chasing the wrong thing.
 
-8. **Measure the real chamber volume** — don't calculate it. The adaptor alone adds **1.03 L**, and
+8. **Measure the real chamber volume** — don't calculate it. The adaptor alone adds **1.36 L**, and
    the dish of the cone adds a few hundred mL more. So 800 mm of pipe is not 6.7 L, it's closer to
    8 L. That's a 20% error if you go by pipe length, which is more than enough to make your
    predictions disagree with reality for no visible reason.
@@ -226,6 +225,38 @@ adaptor between them:
 
    60 mL giving 8.9 mmHg means 5.1 L. Use that measured figure everywhere instead of the pipe
    length, and your predicted pressures will actually match what you see.
+
+---
+
+## Keeping it all reversible
+
+Nothing in this build is glued shut. That's deliberate — you'll be changing the chamber volume
+repeatedly, and a rig you can't take apart is a rig you can only measure once.
+
+| Joint | How it seals | To undo |
+|---|---|---|
+| Adaptor → pipe | Deks rubber joiner, two hose clamps | Loosen two clamps |
+| Pipe → pipe section | Second rubber joiner | Loosen two clamps |
+| Driver → adaptor | Foam gasket + bolts | Unbolt |
+| End cap → pipe | Push-on cap, friction fit | Pull |
+| Sensor port | Barb through the cap | Silicone here is fine — it's small, and silicone peels off cleanly anyway |
+
+If the push-on cap weeps, wrap the pipe end in a couple of turns of self-amalgamating silicone tape
+before pushing it on. Still reversible.
+
+**A note on the epoxy.** It was never a glue — it's a brushed-on coating to seal the *porosity* of
+the print, and it doesn't bond the adaptor to anything. You may not need it at all: at 0.19 psi, a
+PETG print with 5+ perimeters is often gas-tight on its own. Test first. If it does weep, in
+increasing order of permanence:
+
+1. Reprint with more perimeters and a hotter nozzle — better layer bonding, no coating at all
+2. Acrylic spray sealer — thin, cheap, reversible enough
+3. Brushed epoxy or XTC-3D — the durable option, and still only a surface coat
+
+**If you'd rather have no external hardware**, the alternative is `cad/adaptor-socket.stl`: a socket
+that slips over the pipe with an O-ring or silicone seal. It's more compact and adds 0.33 L less
+dead volume, but you'd need a ~110 mm O-ring, and it's fiddlier to separate. The rubber joiner is
+the better trade for a rig you'll be reconfiguring.
 
 ---
 
