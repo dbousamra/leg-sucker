@@ -54,7 +54,9 @@ oscillometry use a loudspeaker as a calibrated pressure source. Same job, smalle
 
 ## Bill of materials
 
-**Total ≈ AU$283** plus shipping, assuming you already have a bench power supply and a 3D printer.
+**≈ AU$57 of it is one AliExpress order** (Pico, driver, sensor, ADC, breadboard, resistors,
+capacitor, barb, tubing — all placed together). The rest is local: driver, PVC, adhesives, cable.
+**Total ≈ AU$250.**, assuming you already have a bench power supply and a 3D printer.
 
 | Item | What it's for | Where | Price |
 |---|---|---|---:|
@@ -71,16 +73,16 @@ oscillometry use a loudspeaker as a calibrated pressure source. Same job, smalle
 | **Neutral-cure silicone sealant** | Seals the sensor port and anything not solvent-welded | [Bunnings](https://www.bunnings.com.au/search/products?q=neutral+cure+silicone+sealant) | $12 |
 | **Two-part epoxy** | Brushed over the printed adaptor — FDM prints leak through layer lines even when they look solid | [Bunnings](https://www.bunnings.com.au/search/products?q=two+part+epoxy+resin) | $20 |
 | **PETG or PLA filament** (~300 g) | The adaptor, from `cad/adaptor.stl` | you have this | — |
-| **Barbed fitting + silicone tube** | Connects the chamber to the pressure sensor | [Bunnings](https://www.bunnings.com.au/search/products?q=barbed+hose+fitting) | $10 |
+| **4 mm brass bulkhead hose barb** | Through a drilled hole in the end cap — barb inside, barb outside, nut clamps it. Seal with silicone | [AliExpress](https://www.aliexpress.com/item/33041152234.html) | $0.52 |
+| **Clear silicone tube, OD5 × ID3 mm, 3 m** | Bulkhead to sensor. 3 mm ID grips the sensor's ~3.2 mm barb and stretches onto the 4 mm bulkhead. Clear so you can see condensation collecting | [AliExpress](https://www.aliexpress.com/item/1005008350652653.html) | $1.99 |
 | **M4 bolts + closed-cell foam gasket** | Bolts the driver to the printed adaptor, gasket makes it airtight | [Bunnings](https://www.bunnings.com.au/search/products?q=M4+bolts) | $15 |
 | **60 mL syringe** | Injects a known volume for the leak test and to calibrate the sensor | [Bunnings](https://www.bunnings.com.au/search/products?q=60ml+syringe) | $5 |
-| **2200 µF 35 V electrolytic capacitor** | Sits across the motor driver's supply. **Don't skip it** — see below | [Jaycar](https://www.jaycar.com.au/search?text=2200uF%2035V%20electrolytic) | $3 |
-| **2 × 10 kΩ resistors** | Voltage divider so the 5 V sensor output can't damage the 3.3 V ADC | [Jaycar](https://www.jaycar.com.au/search?text=10k%20ohm%20resistor) | $1 |
+| **2200 µF 35 V electrolytic** (pack of 10) | Sits across the motor driver's supply. **Don't skip it** — see below | [AliExpress](https://www.aliexpress.com/item/1005011811368397.html) | $1.99 |
+| **Resistor kit**, 600 pcs, 30 values 10 Ω–1 MΩ | You need two 10 kΩ for the divider; the kit costs the same as buying two | [AliExpress](https://www.aliexpress.com/item/1005011772534173.html) | $1.99 |
 | **Figure-8 speaker cable**, 16–18 AWG, a few metres | Driver to motor driver. It carries 3–5 A, so not jumper wire | [Jaycar](https://www.jaycar.com.au/search?text=figure%208%20speaker%20cable) | $8 |
 | **Spade connectors** to suit the driver terminals | Onto the speaker tabs, unless you'd rather solder | [Jaycar](https://www.jaycar.com.au/search?text=spade%20connectors) | $5 |
 | **Female-female jumper leads** | Pico GPIO to the driver's logic pins and the sensor | [Jaycar](https://www.jaycar.com.au/search?text=jumper%20leads%20female) | $8 |
-| **Micro-USB cable** (data, not charge-only) | Powers and programs the Pico. Easy to assume you have one — most people only have USB-C now | [Jaycar](https://www.jaycar.com.au/search?text=micro%20usb%20cable) | $8 |
-| **Small breadboard** | The divider and sensor. **Logic side only** — see the warning in Wire it | [Jaycar](https://www.jaycar.com.au/search?text=breadboard) | $8 |
+| **830-point breadboard** | The divider and sensor. **Logic side only** — see the warning in Wire it | [AliExpress](https://www.aliexpress.com/item/1005003647931024.html) | $1.99 |
 | **2 × pipe saddle clips**, or a G-clamp | Holds the rig down. 29 N oscillating at 1 Hz will walk a 1 m pipe across the bench | [Bunnings](https://www.bunnings.com.au/search/products?q=100mm+pipe+saddle+clip) | $12 |
 
 Notes on a few of these:
