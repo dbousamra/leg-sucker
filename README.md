@@ -54,7 +54,7 @@ oscillometry use a loudspeaker as a calibrated pressure source. Same job, smalle
 
 ## Bill of materials
 
-**Total ≈ AU$230** plus shipping, assuming you already have the Pi 4, a bench power supply, and the
+**Total ≈ AU$251** plus shipping, assuming you already have the Pi 4, a bench power supply, and the
 3D printer.
 
 | Item | What it's for | Where | Price |
@@ -76,6 +76,9 @@ oscillometry use a loudspeaker as a calibrated pressure source. Same job, smalle
 | **60 mL syringe** | Injects a known volume for the leak test and to calibrate the sensor | [Bunnings](https://www.bunnings.com.au/search/products?q=60ml+syringe) | $5 |
 | **2200 µF 35 V electrolytic capacitor** | Sits across the motor driver's supply. **Don't skip it** — see below | [Jaycar](https://www.jaycar.com.au/search?text=2200uF%2035V%20electrolytic) | $3 |
 | **2 × 10 kΩ resistors** | Voltage divider so the 5 V sensor output can't damage the 3.3 V ADC | [Jaycar](https://www.jaycar.com.au/search?text=10k%20ohm%20resistor) | $1 |
+| **Figure-8 speaker cable**, 16–18 AWG, a few metres | Driver to motor driver. It carries 3–5 A, so not jumper wire | [Jaycar](https://www.jaycar.com.au/search?text=figure%208%20speaker%20cable) | $8 |
+| **Spade connectors** to suit the driver terminals | Onto the speaker tabs, unless you'd rather solder | [Jaycar](https://www.jaycar.com.au/search?text=spade%20connectors) | $5 |
+| **Female-female jumper leads** | Pi GPIO to the driver's logic pins and the I²C sensor | [Jaycar](https://www.jaycar.com.au/search?text=jumper%20leads%20female) | $8 |
 
 Notes on a few of these:
 
@@ -276,6 +279,11 @@ the better trade for a rig you'll be reconfiguring.
 
 GPIO12 and 13 are the Pi's hardware PWM pins. PWM one and hold the other low to push the cone; swap
 them to pull. **Never drive both high** — that shorts the supply through the bridge.
+
+> **Keep the motor circuit off the breadboard.** Supply, driver and speaker carry 3–5 A; breadboards
+> and jumper wire are good for about 1 A before they heat up and the contacts degrade. Use the
+> IBT-2's screw terminals and proper cable for anything in that loop. Only the logic pins — `RPWM`,
+> `LPWM`, `R_EN`, `L_EN`, `VCC`, `GND` — should ever see a jumper lead.
 
 > **Use the motor driver, not an audio amplifier.** Audio amps deliberately block anything below
 > ~20 Hz. You're running at about 1 Hz, so an audio amp would throw away almost everything and make
