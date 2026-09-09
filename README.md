@@ -54,14 +54,14 @@ oscillometry use a loudspeaker as a calibrated pressure source. Same job, smalle
 
 ## Bill of materials
 
-**Total ≈ AU$251** plus shipping, assuming you already have the Pi 4, a bench power supply, and the
-3D printer.
+**Total ≈ AU$255** plus shipping, assuming you already have a bench power supply and a 3D printer.
 
 | Item | What it's for | Where | Price |
 |---|---|---|---:|
 | **Jaycar CW2196** — 8" woofer, 8 Ω, Fs 28.1 Hz, Re 6.0 Ω, 90 W | **The actuator.** A speaker is a voice coil with the piston and gas seal already built in | [Jaycar CW2196](https://www.jaycar.com.au/woofer-speaker-driver-8-inch/p/CW2196) | $44.95 |
 | **MPXV7002DP breakout** — ±2 kPa (±15 mmHg) differential, barbed ports | Measures chamber pressure against room air — the one number the whole rig exists to produce | [AliExpress](https://www.aliexpress.com/item/1005007057842984.html) | $20.19 |
-| **ADS1115** — 16-bit I²C ADC | The Pi 4 has no analogue input; this converts the sensor's voltage for it | [AliExpress](https://www.aliexpress.com/item/1005012498259780.html) | $4.49 |
+| **Raspberry Pi Pico 2** (headers soldered) | Runs everything: generates the drive waveform, reads the pressure, streams CSV over USB | [AliExpress](https://www.aliexpress.com/item/1005008058623788.html) · [Core Electronics](https://core-electronics.com.au/) | $5.94–17 |
+| **ADS1115** — 16-bit I²C ADC *(optional)* | Not needed — the Pico has ADCs. Worth $2 as a fallback if the built-in one proves noisy next to the motor driver | [AliExpress](https://www.aliexpress.com/item/1005012498259780.html) | $1.99 |
 | **IBT-2 / BTS7960** — H-bridge motor driver | Drives the coil in both directions at frequencies an audio amp can't reach | [AliExpress](https://www.aliexpress.com/item/1005009194435701.html) | $17.29 |
 | **Holman 100mm × 3m PVC DWV pipe** | The chamber. 85 mL per cm, so 800 mm ≈ 6.7 L | [Bunnings](https://www.bunnings.com.au/holman-100mm-x-3m-pvc-dwv-pipe_p4770345) | $33.65 |
 | **Holman 100mm PVC DWV push-on cap** × 2 | Seals the far end; one gets drilled for the sensor port | [Bunnings](https://www.bunnings.com.au/search/products?q=Holman+100mm+PVC+DWV+Push+On+Cap) | $7.80 |
@@ -265,20 +265,21 @@ the better trade for a rig you'll be reconfiguring.
 
 ## Wire it
 
-**Driver → IBT-2 → Pi**
+**Driver → IBT-2 → Pico**
 
 | IBT-2 pin | Goes to |
 |---|---|
 | `B+` / `B−` | Bench supply at 12 V, **with the 2200 µF cap across these pins** |
 | `M+` / `M−` | Speaker terminals (8 Ω nominal, 6 Ω DC) |
-| `VCC` | Pi **3.3 V** — this is what makes 3.3 V logic register properly |
-| `GND` | Pi GND **and** supply ground |
-| `R_EN`, `L_EN` | Both to Pi 3.3 V |
-| `RPWM` | GPIO12 |
-| `LPWM` | GPIO13 |
+| `VCC` | Pico **3V3** (pin 36) — this is what makes 3.3 V logic register properly |
+| `GND` | Pico GND **and** supply ground |
+| `R_EN`, `L_EN` | Both to Pico 3V3 |
+| `RPWM` | GP16 |
+| `LPWM` | GP17 |
 
-GPIO12 and 13 are the Pi's hardware PWM pins. PWM one and hold the other low to push the cone; swap
-them to pull. **Never drive both high** — that shorts the supply through the bridge.
+GP16 and GP17 are channels A and B of the same PWM slice, so they share one 20 kHz carrier with
+independent duty — exactly what's wanted. PWM one and hold the other low to push the cone; swap them
+to pull. **Never drive both high** — that shorts the supply through the bridge.
 
 > **Keep the motor circuit off the breadboard.** Supply, driver and speaker carry 3–5 A; breadboards
 > and jumper wire are good for about 1 A before they heat up and the contacts degrade. Use the
@@ -289,20 +290,30 @@ them to pull. **Never drive both high** — that shorts the supply through the b
 > ~20 Hz. You're running at about 1 Hz, so an audio amp would throw away almost everything and make
 > the rig look like a total failure.
 
-**Pressure sensor → ADS1115 → Pi**
+**Pressure sensor → Pico**
 
-- Sensor: 5 V and GND from the Pi.
-- Sensor output → **2:1 divider** (two 10 kΩ resistors) → ADS1115 channel A0.
-  The sensor swings 0.5–4.5 V, which would damage a 3.3 V-powered ADC. Halving gives 0.25–2.25 V.
-- ADS1115: 3.3 V, GND, SDA → GPIO2, SCL → GPIO3.
+- Sensor: **VBUS** (pin 40, 5 V when the Pico is USB-powered) and GND.
+- Sensor output → **2:1 divider** (two 10 kΩ resistors) → **GP26** (ADC0).
 
-Even after halving, resolution is around 0.001 mmHg per step. Nowhere near a limitation.
+The divider isn't optional. The sensor runs on 5 V and swings 0.5–4.5 V; the Pico's ADC tops out at
+3.3 V. Halving gives 0.25–2.25 V, which fits with headroom even if the sensor rails.
+
+Resolution works out to about **0.012 mmHg per step**, and you can oversample on top of that. Nowhere
+near a limitation.
+
+**Optional: ADS1115 instead of the built-in ADC.** The Pico's ADC is a 12-bit SAR whose reference is
+the 3.3 V rail — the same rail sitting next to a motor driver switching several amps at 20 kHz. If
+the pressure trace looks noisier than the rig should be, swapping to the ADS1115 (16-bit, own
+reference, programmable gain) tells you immediately whether the noise is real or an artefact of
+measurement. Wire it 3V3 / GND / SDA→GP0 / SCL→GP1, with the same divider into A0.
+
+Start with the built-in ADC — fewer parts, faster to get going. Keep the ADS1115 in the drawer.
 
 ---
 
 ## Run it
 
-Use `pigpio` for hardware-timed PWM. Generate a sine wave, log the pressure, plot it.
+Generate a sine wave on the PWM pins, log the pressure, plot it.
 
 Then try:
 
@@ -320,9 +331,10 @@ Two practical notes:
 - **Don't hold a steady offset for long.** At these speeds the coil behaves like a plain resistor and
   pulls current while doing nothing, so it heats up. Short bursts are fine.
 
-**One Pi 4 caveat:** Linux isn't real-time. The PWM carrier is hardware so that's rock solid, but
-waveform updates come from Python and may jitter a millisecond or two. Irrelevant now. If you later
-want tight ECG-gated timing, that part moves to a microcontroller.
+Firmware is MicroPython on the Pico: hardware PWM for the carrier, a timer to step the waveform,
+`machine.ADC` for the sensor, and `print()` of CSV over USB serial. Capture on your laptop and plot
+there. Timing is deterministic, so the 50 ms step measurement and later ECG gating will both hold up
+— which a Linux host would not have.
 
 ---
 

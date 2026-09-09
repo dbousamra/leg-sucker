@@ -7,6 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 No code yet. No build, test, or run commands exist — do not invent them; update this file once the
 first firmware lands.
 
+**Controller is a Raspberry Pi Pico 2, not a Pi 4** — it has built-in ADCs and deterministic timing.
+
 **Current focus is `README.md`: MVP 1, a bench rig answering one question — can a voice coil generate
 useful +/- pressure in a sealed chamber?** Thigh seal, ECG gating, physiological endpoints, and
 human use are all explicitly deferred. Read `README.md` before proposing work.
