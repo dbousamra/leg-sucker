@@ -54,7 +54,7 @@ oscillometry use a loudspeaker as a calibrated pressure source. Same job, smalle
 
 ## Bill of materials
 
-**Total ≈ AU$255** plus shipping, assuming you already have a bench power supply and a 3D printer.
+**Total ≈ AU$283** plus shipping, assuming you already have a bench power supply and a 3D printer.
 
 | Item | What it's for | Where | Price |
 |---|---|---|---:|
@@ -78,7 +78,10 @@ oscillometry use a loudspeaker as a calibrated pressure source. Same job, smalle
 | **2 × 10 kΩ resistors** | Voltage divider so the 5 V sensor output can't damage the 3.3 V ADC | [Jaycar](https://www.jaycar.com.au/search?text=10k%20ohm%20resistor) | $1 |
 | **Figure-8 speaker cable**, 16–18 AWG, a few metres | Driver to motor driver. It carries 3–5 A, so not jumper wire | [Jaycar](https://www.jaycar.com.au/search?text=figure%208%20speaker%20cable) | $8 |
 | **Spade connectors** to suit the driver terminals | Onto the speaker tabs, unless you'd rather solder | [Jaycar](https://www.jaycar.com.au/search?text=spade%20connectors) | $5 |
-| **Female-female jumper leads** | Pi GPIO to the driver's logic pins and the I²C sensor | [Jaycar](https://www.jaycar.com.au/search?text=jumper%20leads%20female) | $8 |
+| **Female-female jumper leads** | Pico GPIO to the driver's logic pins and the sensor | [Jaycar](https://www.jaycar.com.au/search?text=jumper%20leads%20female) | $8 |
+| **Micro-USB cable** (data, not charge-only) | Powers and programs the Pico. Easy to assume you have one — most people only have USB-C now | [Jaycar](https://www.jaycar.com.au/search?text=micro%20usb%20cable) | $8 |
+| **Small breadboard** | The divider and sensor. **Logic side only** — see the warning in Wire it | [Jaycar](https://www.jaycar.com.au/search?text=breadboard) | $8 |
+| **2 × pipe saddle clips**, or a G-clamp | Holds the rig down. 29 N oscillating at 1 Hz will walk a 1 m pipe across the bench | [Bunnings](https://www.bunnings.com.au/search/products?q=100mm+pipe+saddle+clip) | $12 |
 
 Notes on a few of these:
 
@@ -301,6 +304,16 @@ The divider isn't optional. The sensor runs on 5 V and swings 0.5–4.5 V; the P
 Resolution works out to about **0.012 mmHg per step**, and you can oversample on top of that. Nowhere
 near a limitation.
 
+Two things that will cost you an evening if you get them wrong:
+
+- **The sensor has two ports. Only one goes to the chamber**; the other must stay open to room air.
+  That's what makes the reading differential. Which port you pick sets the sign — if suction reads
+  positive, swap the tubes or flip the sign in software.
+- **Star-ground at the IBT-2.** The Pico is powered from your laptop's USB, and its ground now
+  connects to a circuit switching several amps. Run the motor ground straight back to the driver
+  rather than daisy-chaining it through the breadboard, or you'll see the switching noise in your
+  pressure trace and possibly drop the USB connection.
+
 **Optional: ADS1115 instead of the built-in ADC.** The Pico's ADC is a 12-bit SAR whose reference is
 the 3.3 V rail — the same rail sitting next to a motor driver switching several amps at 20 kHz. If
 the pressure trace looks noisier than the rig should be, swapping to the ADS1115 (16-bit, own
@@ -310,6 +323,26 @@ measurement. Wire it 3V3 / GND / SDA→GP0 / SCL→GP1, with the same divider in
 Start with the built-in ADC — fewer parts, faster to get going. Keep the ADS1115 in the drawer.
 
 ---
+
+## First power-up
+
+Do this in order. Each step isolates one thing, so when something misbehaves you know what it was.
+
+1. **Set the supply before anything is connected.** 12 V, current limit 4 A. Verify with a meter —
+   don't trust the front panel.
+
+2. **Test the driver with the speaker on the bench, out of the chamber.** Run a slow sine at low
+   amplitude and watch the cone. You're checking that the driver works, the direction reverses, and
+   nothing rubs. If it fails here it's electrical, and you don't want to be wondering whether it's a
+   leak.
+
+3. **Listen at the extremes.** Wind the amplitude up until you hear the coil bottom out — a dull
+   click at the excursion limit. Note the drive level where that starts and stay below it. That
+   figure is also your first real estimate of Xmax, which no datasheet gave you.
+
+4. **Now bolt it to the chamber** and repeat at low amplitude. Pressure should appear immediately.
+
+5. **Leak test before you interpret anything.**
 
 ## Run it
 
