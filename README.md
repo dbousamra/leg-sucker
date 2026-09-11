@@ -1,420 +1,192 @@
 # Leg Sucker — MVP 1
 
-## What we're ultimately trying to build
+## What this is
 
-Some people have arteries in their legs so narrowed that not enough blood gets in. The tissue starves,
-ulcers open up and won't heal, and in bad cases the leg is eventually amputated.
+Some people have arteries in their legs so narrowed that not enough blood gets in. The tissue
+starves, ulcers open up and won't heal, and in bad cases the leg is amputated. The usual treatment —
+squeezing the limb with compression stockings or cuffs — can't be used, because squeezing a leg
+that's already short of arterial blood makes the inflow worse, and the skin is often too fragile to
+touch at all.
 
-The usual way to help a poorly circulating leg is to squeeze it — compression stockings, inflatable
-cuffs — which pushes blood back toward the heart. But you can't do that to these legs. Squeezing a
-limb that's already short of arterial blood makes the inflow worse, and the skin is often too fragile
-and ulcerated to touch at all.
+The idea is to move blood **without touching the leg**: seal the limb in a rigid chamber and cycle
+the air pressure around it in time with the heartbeat. Suck as the heart beats, so the arteries meet
+less resistance from outside. Push gently between beats, to help fluid drain back out. A bellows
+around the leg, breathing with the pulse.
 
-So the idea is to move blood **without touching the leg**. Seal the whole limb inside a rigid chamber
-and change the air pressure around it, timed to the heartbeat:
+That's unproven and a long way off. **This document is the first question underneath it: can a voice
+coil generate useful pressure in a sealed chamber?** A speaker on a sealed PVC tube, and a gauge to
+see what comes out.
 
-- **Suck (lower the pressure) as the heart beats** — the leg's arteries meet less resistance from
-  outside, so blood should flow in more easily.
-- **Push (raise it slightly) between beats** — helping blood and fluid drain back out, which should
-  reduce swelling.
-
-Think of it as a bellows around the leg, breathing in time with the pulse. Nothing ever contacts the
-skin, which is the whole point — it should work on limbs that no compression device could safely go
-near.
-
-Whether that actually helps a patient is a long way off and completely unproven. This document is
-about the first question underneath it all.
-
-## Goal of this MVP
-
-**Put a voice coil on a sealed PVC tube and see how much pressure it can make.**
-
-No leg, no seal, no ECG, no human. Just: does this move pressure, and how much?
+No leg, no seal, no ECG, no human.
 
 ---
 
-## On the actuator
+## Parts
 
-Bare voice coil motors (the cylindrical AliExpress ones) have no piston and no seal — you'd have to
-design and print both, plus a guide to stop the coil rubbing.
+| Item | What it does |
+|---|---|
+| [8" woofer, Jaycar CW2196](https://www.jaycar.com.au/woofer-speaker-driver-8-inch/p/CW2196) | **The actuator.** A speaker is a voice coil that already has a piston (the cone) and a flexible gas seal (the surround) built in |
+| [100 mm PVC DWV pipe, 3 m](https://www.bunnings.com.au/holman-100mm-x-3m-pvc-dwv-pipe_p4770345) | The chamber. 85 mL of air per cm of length |
+| [100 mm push-on cap](https://www.bunnings.com.au/search/products?q=Holman+100mm+PVC+DWV+Push+On+Cap) × 2 | Seals the far end. One gets drilled for the sensor port |
+| [Deks 100 mm rubber joiner](https://www.bunnings.com.au/deks-100mm-pvc-to-pvc-rubber-joiner_p4730112) × 2 | Joins adaptor to pipe, and pipe to pipe — with hose clamps, so you can pull it apart to change the chamber volume |
+| `cad/adaptor-spigot.stl` | Printed funnel taking the 220 mm driver down to the 110 mm pipe |
+| [4 mm brass bulkhead barb](https://www.aliexpress.com/item/33041152234.html) | Passes through the end cap so the sensor can see chamber pressure. Nut clamps it, silicone seals it |
+| [Clear silicone tube, OD5 × ID3 mm](https://www.aliexpress.com/item/1005008350652653.html) | Barb to sensor. Clear, so you can see if condensation collects |
+| [MPXV7002DP sensor](https://www.aliexpress.com/item/1005007057842984.html) | Measures chamber pressure against room air. ±15 mmHg. **The one number this whole rig exists to produce** |
+| [Raspberry Pi Pico 2](https://www.aliexpress.com/item/1005008058623788.html) | Generates the drive waveform, reads the sensor, streams CSV over USB |
+| [IBT-2 / BTS7960 motor driver](https://www.aliexpress.com/item/1005009194435701.html) | Pushes current through the coil in both directions, at frequencies an audio amp can't reach |
+| [2200 µF 35 V capacitor](https://www.aliexpress.com/item/1005011811368397.html) | Sits across the driver's supply and soaks up the energy the cone pushes back |
+| [Resistor kit](https://www.aliexpress.com/item/1005011772534173.html) — you need 2 × 10 kΩ | Halves the sensor's 5 V output so it can't destroy the Pico's 3.3 V input |
+| [830-point breadboard](https://www.aliexpress.com/item/1005003647931024.html) | Holds the divider and the sensor |
+| [Dupont jumpers, 120 pc](https://www.aliexpress.com/item/1005002349042216.html) | Pico to driver logic pins and to the sensor |
+| [18 AWG silicone cable, 3 m](https://www.aliexpress.com/item/1005009192506490.html) | Driver to speaker. Carries 3–5 A, so not jumper wire |
+| [Spade connectors](https://www.jaycar.com.au/search?text=spade%20connectors) | Onto the speaker tabs |
+| [Neutral-cure silicone](https://www.bunnings.com.au/search/products?q=neutral+cure+silicone+sealant) | Seats the barb and anything not solvent-welded |
+| [PVC cement + priming fluid](https://www.bunnings.com.au/search/products?q=Protek+Type+N+PVC+Cement+Non+Pressure) | The PVC-to-PVC joints. Does **not** bond to PLA or PETG |
+| [Two-part epoxy](https://www.bunnings.com.au/search/products?q=two+part+epoxy+resin) | Sealing the printed adaptor if it leaks through the layer lines |
+| [M4 bolts + foam gasket](https://www.bunnings.com.au/search/products?q=M4+bolts) | Mounts the driver airtight to the adaptor |
+| [Pipe saddle clips](https://www.bunnings.com.au/search/products?q=100mm+pipe+saddle+clip) × 2 | Holds the rig down. 29 N oscillating at 1 Hz will walk a 1 m pipe off the bench |
+| [60 mL syringe](https://www.bunnings.com.au/search/products?q=60ml+syringe) | Injects a known volume for the leak test and to measure the chamber |
 
-Guided voice coil actuators with a housing, shaft and internal bearings do exist — Moticont GVCM,
-H2W NCM — but **none of them are sealed either**. They give you a shaft, not a pump. They're also
-quote-only industrial parts, well outside this budget. Voice-coil-driven sealed pumps show up in
-patents, not catalogues.
-
-**A loudspeaker driver is the off-the-shelf version of exactly that assembly:** voice coil motor,
-rigid piston (the cone), flexible gas seal at the rim (the surround), and a centring spring that
-provides the linear guidance (the spider). For AU$40.
-
-This is also how it's done in respiratory medicine — forced oscillation technique and impulse
-oscillometry use a loudspeaker as a calibrated pressure source. Same job, smaller volume.
+Plus a bench supply, a 3D printer, and a micro-USB cable.
 
 ---
 
-## Bill of materials
+## Build
 
-**Total ≈ AU$320**, assuming you already have a bench power supply, a 3D printer and a micro-USB
-cable. Split into one AliExpress order and a local run.
+**1. Print the adaptor** — `cad/adaptor-spigot.stl`. 245 mm flange, 182 mm driver cutout, tapering
+to a 110 mm spigot. Print flange-down; the taper is 38° from vertical so it needs no support.
 
-Prices are what an existing AliExpress account actually pays. Signed out, the site quotes much lower
-"new shopper" prices that evaporate at checkout — don't plan around them.
+The front face has a scribed groove at the 212 mm bolt circle but **no bolt holes** — Jaycar don't
+publish how many the driver has. Sit the driver on the groove, mark through its own flange, drill.
 
-### AliExpress — one order, ≈ AU$131 delivered
+**2. Cut 800 mm of pipe.** Cap one end.
 
-| Item | What it's for | Price |
-|---|---|---:|
-| [**MPXV7002DP breakout**](https://www.aliexpress.com/item/1005007057842984.html) — ±2 kPa (±15 mmHg) differential, barbed ports | Measures chamber pressure against room air — the one number the whole rig exists to produce | $19.19 + $4.33 ship |
-| [**IBT-2 / BTS7960**](https://www.aliexpress.com/item/1005009194435701.html) — H-bridge motor driver | Drives the coil both directions at frequencies an audio amp can't reach | $17.29 + $8.32 ship |
-| [**Raspberry Pi Pico 2**](https://www.aliexpress.com/item/1005008058623788.html) (variant "Pico 2-Solder") | Runs everything: drive waveform, pressure logging, CSV over USB | $17.09 |
-| [**Clear silicone tube**](https://www.aliexpress.com/item/1005008350652653.html), OD5 × ID3 mm, 3 m | Bulkhead to sensor. 3 mm ID grips the sensor's ~3.2 mm barb and still stretches onto the 4 mm bulkhead. Clear so condensation in the line is visible | $9.19 |
-| [**830-point breadboard**](https://www.aliexpress.com/item/1005003647931024.html) | The divider and sensor. **Logic side only** — see Wire it | $8.39 |
-| [**Red/black silicone cable**](https://www.aliexpress.com/item/1005009192506490.html), 18 AWG, 3 m | Driver to motor driver. Carries 3–5 A, so not jumper wire | $7.22 |
-| [**Resistor kit**](https://www.aliexpress.com/item/1005011772534173.html), 600 pcs, 30 values 10 Ω–1 MΩ | You need two 10 kΩ for the divider; the kit costs less than buying two locally | $6.69 |
-| [**ADS1220**](https://www.aliexpress.com/item/1005012498259780.html) — 24-bit I²C ADC *(optional)* | Not needed, the Pico has ADCs. But 24-bit with a PGA makes it the better tiebreaker if the built-in ADC looks noisy next to the driver | $6.09 |
-| [**Dupont jumper set**](https://www.aliexpress.com/item/1005002349042216.html), 120 pcs, 20 cm, M-M/M-F/F-F | Pico GPIO to the driver's logic pins and the sensor. The breadboard is useless without these | $5.45 + $5.65 ship |
-| [**2200 µF 35 V electrolytic**](https://www.aliexpress.com/item/1005011811368397.html) (pack of 10) | Across the motor driver's supply. **Don't skip it** — see Power supply | $5.45 |
-| [**ADS1115**](https://www.aliexpress.com/item/1005012498259780.html) — 16-bit I²C ADC *(optional)* | Same job as the ADS1220, lower resolution. One of the two is plenty | $4.49 |
-| [**4 mm brass bulkhead hose barb**](https://www.aliexpress.com/item/33041152234.html) | Through a drilled hole in the end cap — barb inside, barb outside, nut clamps it | $0.52 + $7.40 ship |
+**3. Drill the end cap** for the bulkhead barb. Nut on the inside, silicone on the seat.
 
-### Local — ≈ AU$190
+**4. Check the print holds air.** Blank off the spigot and pressurise. PETG with 5+ perimeters is
+often fine; only brush it with epoxy if it actually weeps.
 
-| Item | What it's for | Where | Price |
-|---|---|---|---:|
-| **Jaycar CW2196** — 8" woofer, 8 Ω, Fs 28.1 Hz, Re 6.0 Ω, 90 W | **The actuator.** A speaker is a voice coil with the piston and gas seal already built in | [Jaycar](https://www.jaycar.com.au/woofer-speaker-driver-8-inch/p/CW2196) | $44.95 |
-| **Holman 100mm × 3m PVC DWV pipe** | The chamber. 85 mL per cm, so 800 mm ≈ 6.7 L | [Bunnings](https://www.bunnings.com.au/holman-100mm-x-3m-pvc-dwv-pipe_p4770345) | $33.65 |
-| **Deks 100mm PVC-to-PVC rubber joiner** × 2 | **Every joint, reversibly.** Rubber sleeve with two hose clamps. Undo the clamps to change chamber volume | [Bunnings](https://www.bunnings.com.au/deks-100mm-pvc-to-pvc-rubber-joiner_p4730112) | $21.00 |
-| **Two-part epoxy** | Sealing the printed adaptor if it weeps — FDM prints leak through layer lines | [Bunnings](https://www.bunnings.com.au/search/products?q=two+part+epoxy+resin) | $20 |
-| **M4 bolts + closed-cell foam gasket** | Bolts the driver to the adaptor, gasket makes it airtight | [Bunnings](https://www.bunnings.com.au/search/products?q=M4+bolts) | $15 |
-| **Neutral-cure silicone sealant** | Seats the bulkhead barb and anything not solvent-welded. Not worth shipping from China | [Bunnings](https://www.bunnings.com.au/search/products?q=neutral+cure+silicone+sealant) | $12 |
-| **2 × pipe saddle clips**, or a G-clamp | Holds the rig down. 29 N oscillating at 1 Hz will walk a 1 m pipe across the bench | [Bunnings](https://www.bunnings.com.au/search/products?q=100mm+pipe+saddle+clip) | $12 |
-| **Protek 250ml Type N PVC cement** | The PVC-to-PVC joints. Does **not** bond to PLA or PETG | [Bunnings](https://www.bunnings.com.au/search/products?q=Protek+Type+N+PVC+Cement+Non+Pressure) | $8.42 |
-| **Holman 100mm PVC DWV push-on cap** × 2 | Seals the far end; one gets drilled for the sensor port | [Bunnings](https://www.bunnings.com.au/search/products?q=Holman+100mm+PVC+DWV+Push+On+Cap) | $7.80 |
-| **Protek 125ml priming fluid** | Preps the PVC so the cement bonds | [Bunnings](https://www.bunnings.com.au/search/products?q=Protek+Red+Priming+Fluid) | $6.68 |
-| **Spade connectors** to suit the driver terminals | Onto the speaker tabs, unless you'd rather solder | [Jaycar](https://www.jaycar.com.au/search?text=spade%20connectors) | $5 |
-| **60 mL syringe** | Known volume for the leak test and sensor calibration | [Bunnings](https://www.bunnings.com.au/search/products?q=60ml+syringe) | $5 |
-| **PETG or PLA filament** (~300 g) | The adaptor, from `cad/adaptor-spigot.stl` | you have this | — |
+**5. Bolt the driver on** — cone facing *into* the tube, basket out in free air, foam gasket under
+the flange.
 
-Notes on a few of these:
+That orientation matters. Mounted this way the funnel only clears the shallow dish of the cone.
+Turned round, it would have to swallow the whole 92 mm-deep basket.
 
-- **The driver.** Jaycar publish the full Thiele-Small parameters (Fs 28.1 Hz, Qts 0.33, Vas 42 L,
-  Re 6.0 Ω), which is why this one over the alternatives — you can predict its behaviour instead of
-  guessing. They don't publish excursion, so this doc assumes ~220 cm² of cone and ±4 mm of travel,
-  typical for an 8". Every number in the expected-pressure table scales linearly with those, so your
-  first bench measurement effectively calibrates the whole rig.
-- **Its recommended box is 42 L and you're using 7–15 L.** That's fine: at 6.7 L it becomes a
-  Qtc 0.89 / Fc 76 Hz sealed alignment, which is an ordinary small sealed build. The paper cone will
-  cope. But it does mean the air spring ends up roughly 6× stiffer than the driver's own suspension,
-  and that stiffness is where the current demand below comes from.
-- **3 m of pipe** is far more than the 800 mm you start with, deliberately: the spare lets you extend
-  the chamber and watch the pressure fall off, which is the measurement that justifies scaling up.
-- **Only one ADC is needed, if any.** The Pico has three built in. Both the ADS1115 and ADS1220 are
-  listed because they're a few dollars and settle an argument you can't otherwise win: when the first
-  pressure trace looks noisy, is that the rig or the measurement? Swapping in an external ADC with its
-  own reference answers it in ten minutes.
+**6. Clamp the adaptor to the pipe** with a rubber joiner. Tighten both hose clamps. Nothing here is
+glued — solvent cement dissolves PVC and does nothing to PETG, and you'll be pulling this apart
+repeatedly to change volume.
 
-### Power supply
+**7. Bolt the rig down** with the saddle clips.
 
-**A 0–30 V / 0–5 A bench supply is ideal** — better than a fixed 12 V brick, for two reasons:
+**8. Leak test.** Push air in with the syringe and watch the pressure. It should hold for at least
+ten seconds. Find leaks now — a leaky tube looks exactly like a weak actuator.
 
-- **Adjustable voltage** lets you start at 5 V and wind up gradually. Much safer than going straight
-  to full drive on the first run.
-- **The current limit is a hardware safety net for the voice coil.** Set it to **4 A** — that's
-  inside both the driver's 90 W rating and your supply's 5 A ceiling, so the coil physically cannot
-  be cooked no matter what the software does.
+**9. Measure the real chamber volume.** Don't calculate it: the adaptor alone adds 1.36 L, so 800 mm
+of pipe is nearer 8 L than 6.7 L. Inject a known volume **slowly** and read the settled pressure:
 
-The driver is 8 Ω nominal but **6 Ω DC**, so at 12 V it draws about 2 A and at 24 V about 4 A.
+```
+V = 760 × injected_volume / ΔP        [litres, mmHg]
+```
 
-**Current is the binding constraint here, not the driver.** Reaching ±10 mmHg in a 6.7 L chamber
-needs somewhere around **3–5 A at 18–29 V** — right at the top of what your supply can give. That
-estimate is rough, since excursion isn't published.
+60 mL giving 8.9 mmHg means 5.1 L. Use that number everywhere afterwards.
 
-> **So build long, then shorten.** Start with a bigger chamber — 15 L or so, where you'd only need
-> 1.5–2 A — and confirm the whole rig works end to end. Then cut the pipe down toward 6.7 L and watch
-> the pressure climb. Much better than starting at full pressure and having to work out whether a
-> disappointing result is current limiting, a leak, or the driver itself.
->
-> If you can't reach ±10 mmHg at 4 A, don't push the current — use a longer chamber and accept a
-> smaller swing. The scaling law is what you're measuring; the absolute number matters less.
+---
 
-> **You must add a bulk capacitor.** Solder a **2200 µF, 35 V** electrolytic directly across `B+` and
-> `B−` at the motor driver — stripe to `B−`. It's not optional, for two reasons:
->
-> 1. The driver draws current in 20 kHz pulses. A bench supply's regulation loop is far too slow to
->    follow that, and the long leads make it worse. Without local capacitance the supply rail sags
->    and rings.
-> 2. **A bench supply can source current but cannot sink it.** Every time the cone decelerates or
->    reverses, energy flows back into the supply. With nowhere to go it pushes the rail voltage up,
->    which can trip the supply's over-voltage protection or damage the driver. The capacitor absorbs
->    it.
+## Wire
 
-One behaviour to know: if you hit the current limit the supply drops into constant-current mode and
-the voltage sags. That protects the coil, but it also distorts your waveform. If the pressure trace
-suddenly looks clipped or misshapen, check whether the supply has gone into CC before you go hunting
-for a mechanical cause.
+**Driver → IBT-2 → Pico**
+
+| IBT-2 | Goes to |
+|---|---|
+| `B+` / `B−` | Bench supply, **with the 2200 µF capacitor across these pins** (stripe to `B−`) |
+| `M+` / `M−` | Speaker terminals, 18 AWG cable |
+| `VCC` | Pico `3V3` (pin 36) |
+| `GND` | Pico `GND` **and** supply ground |
+| `R_EN`, `L_EN` | Both to Pico `3V3` |
+| `RPWM` | `GP16` |
+| `LPWM` | `GP17` |
+
+PWM one and hold the other low to push the cone; swap to pull. **Never drive both high** — that
+shorts the supply through the bridge.
+
+**Sensor → Pico**
+
+- Sensor power: `VBUS` (pin 40) and `GND`
+- Sensor output → **2:1 divider**, two 10 kΩ resistors → `GP26`
+- **Only one sensor port goes to the chamber.** The other stays open to room air — that's what makes
+  it differential
+
+**Four things that will cost you an evening**
+
+- **Motor driver, not an audio amp.** Audio amps block everything below ~20 Hz. You're running at
+  1 Hz, so one would throw away almost everything and make the rig look dead.
+- **The divider isn't optional.** The sensor swings to 4.5 V; the Pico's ADC stops at 3.3 V.
+- **Keep the motor circuit off the breadboard.** It carries 3–5 A; breadboards manage about 1 A
+  before the contacts cook. Screw terminals and proper cable for that loop.
+- **Star-ground at the IBT-2.** Run motor ground straight back to the driver, not daisy-chained
+  through the breadboard, or the switching noise lands in your pressure trace.
+
+---
+
+## Run
+
+Set the supply to **12 V with a 4 A current limit** before anything is connected. Verify with a
+meter.
+
+**1. Test the driver with the speaker on the bench, out of the chamber.** Slow sine, low amplitude,
+watch the cone. If it fails here it's electrical — you don't want to be wondering whether it's a
+leak.
+
+**2. Wind the amplitude up until you hear the coil bottom out** — a dull click. Stay below that
+level, and note it. **That's your first real measurement of Xmax**, which no datasheet gave you, and
+every predicted pressure below scales off it.
+
+**3. Bolt it to the chamber** and repeat at low amplitude. Pressure should appear immediately.
+
+**4. Start with a long chamber and work down.** At 15 L you need only 1.5–2 A. At 6.7 L you need
+3–5 A, near your supply's ceiling — and if the result disappoints you won't know whether it's
+current limiting, a leak, or the driver.
+
+Then measure:
+
+- **Slow sine, ~1 Hz** — how many mmHg? That's the headline number
+- **Sweep 0.5 to 20 Hz** — find where it falls off
+- **Fast step** — flip negative to positive as fast as you can. 50 ms is the target, the useful
+  window in a heartbeat
+- **Add pipe** — pressure should drop in proportion. That's the scaling law that predicts a
+  leg-sized chamber
+
+**Don't hold a steady offset for long.** Below resonance the coil behaves like a plain resistor and
+pulls current while doing nothing, so it heats. Short bursts only.
 
 ---
 
 ## What to expect
 
-An 8" driver has a cone area of roughly 220 cm² and moves about ±4 mm, so it sweeps around
-**176 mL** per cycle. Put that into different tube lengths and you should see:
+The driver sweeps about **176 mL** per cycle (220 cm² cone, ±4 mm).
 
-| Tube volume | DN100 pipe length | Expected swing |
-|---:|---:|---|
-| 2 L | 235 mm | ±33 to ±47 mmHg |
-| **5 L** | **590 mm** | **±13 to ±19 mmHg** |
-| 6.7 L | 790 mm | ±10 to ±14 mmHg |
-| 10 L | 1180 mm | ±6.7 to ±9.4 mmHg |
-| 15 L | 1770 mm | ±4.5 to ±6.2 mmHg |
-| 45 L (real leg chamber) | — | ±1.5 to ±2.1 mmHg |
+| Chamber | Expected swing |
+|---:|---|
+| 2 L | ±33 to ±47 mmHg |
+| 5 L | ±13 to ±19 mmHg |
+| 6.7 L | ±10 to ±14 mmHg |
+| 10 L | ±6.7 to ±9.4 mmHg |
+| 15 L | ±4.5 to ±6.2 mmHg |
+| 45 L (real leg chamber) | ±1.5 to ±2.1 mmHg |
 
-The range on each row is because air heats slightly as it's compressed. Squeeze it slowly and the
-heat escapes (lower figure); squeeze it fast and it doesn't (upper figure). Which end you land on is
-one of the things this rig measures.
+Each range spans slow compression (heat escapes) to fast (it doesn't). Which end you land on is one
+of the things this rig measures.
 
-Two things fall out of that table:
-
-- **At 5 L you'll overshoot ±10 mmHg and probably saturate the ±15 mmHg sensor.** That's a good
-  problem — it means the concept works. Add pipe until it fits on the scale.
-- **At 45 L this driver gives you almost nothing.** That's not a failure, it's the scaling law doing
-  what it does: you'd need roughly 1 litre of swept volume for ±10 mmHg in a leg-sized chamber, about
-  6× this driver. Proving the physics at 5 L is what justifies spending real money on that actuator.
-
-## Build it
-
-Start at **~800 mm of pipe (6.7 L)**, which should land near ±10 mmHg and keep you on-scale.
-
-**The driver is about twice the diameter of the pipe**, so they can't just be joined — you print an
-adaptor between them:
-
-| | |
-|---|---|
-| Driver overall diameter | **220 mm** (and 92 mm deep) |
-| Driver cutout | **182 mm** |
-| Driver bolt circle | 212 mm |
-| DN100 pipe | 110 mm outside, **~104 mm inside** |
-
-1. **Cut ~800 mm of pipe.** Cap one end. Drill the cap for the barb fitting and seal it with
-   silicone — that's where the pressure sensor connects.
-
-2. **Print the adaptor** — `cad/adaptor-spigot.stl`. 245 mm flange, 182 mm driver cutout, tapering
-   to a 110 mm spigot that a rubber joiner clamps onto. 100 mm long. Print flange-down: the taper is
-   38° from vertical, so no support needed.
-
-   245 mm fits flat on a 256 bed, diagonally on a 220. It's chunky — ~460 cm³ solid, so a couple of
-   hundred grams and several hours. Drop `FLANGE_THICKNESS` to 6 mm in `cad/adaptor.py` if you want
-   it lighter.
-
-   **No bolt holes.** Jaycar give the 212 mm bolt circle but not how many holes the driver has, so
-   the front face has a shallow scribed groove at that diameter. Sit the driver on it, mark through
-   its own flange, drill to match.
-
-3. **Join everything with the rubber joiners — nothing here is glued.** The joiner is a rubber
-   sleeve with two hose clamps: slide it over the adaptor's spigot and the pipe, tighten both, done.
-   Undo the clamps and the whole rig comes apart.
-
-   That matters more than convenience: the test plan works by *changing the chamber volume*, so
-   pipe joints you can undo in thirty seconds are the difference between a rig you can sweep and one
-   you'd have to cut up.
-
-4. **Check the print is gas-tight before assembling.** FDM prints can leak through the layer lines.
-   Blank off the spigot, pressurise, and see. PETG with 5+ perimeters is often fine as-is — only
-   coat it if it actually leaks, and see the note below on sealing options.
-
-5. **Bolt the driver on**, cone facing into the tube, basket out in free air. Foam gasket under the
-   flange, bolts through your drilled holes. Also reversible.
-
-   That orientation isn't cosmetic. Mounted this way the funnel only has to clear the shallow dish
-   of the cone. Turned round, it would have to swallow the entire 92 mm-deep basket, and the funnel
-   would need to be far bigger.
-
-7. **Leak test before you go further.** Push some air in with a syringe and watch the pressure. It
-   should hold for at least ten seconds. If it drops fast, find the leak now — a leaky tube looks
-   exactly like a weak actuator, and you'll waste a weekend chasing the wrong thing.
-
-8. **Measure the real chamber volume** — don't calculate it. The adaptor alone adds **1.36 L**, and
-   the dish of the cone adds a few hundred mL more. So 800 mm of pipe is not 6.7 L, it's closer to
-   8 L. That's a 20% error if you go by pipe length, which is more than enough to make your
-   predictions disagree with reality for no visible reason.
-
-   Inject a known volume **slowly** with the syringe (slowly matters — it keeps the air isothermal)
-   and read the settled pressure. Then:
-
-   ```
-   V = 760 × injected_volume / ΔP        [litres, mmHg]
-   ```
-
-   60 mL giving 8.9 mmHg means 5.1 L. Use that measured figure everywhere instead of the pipe
-   length, and your predicted pressures will actually match what you see.
-
----
-
-## Keeping it all reversible
-
-Nothing in this build is glued shut. That's deliberate — you'll be changing the chamber volume
-repeatedly, and a rig you can't take apart is a rig you can only measure once.
-
-| Joint | How it seals | To undo |
-|---|---|---|
-| Adaptor → pipe | Deks rubber joiner, two hose clamps | Loosen two clamps |
-| Pipe → pipe section | Second rubber joiner | Loosen two clamps |
-| Driver → adaptor | Foam gasket + bolts | Unbolt |
-| End cap → pipe | Push-on cap, friction fit | Pull |
-| Sensor port | Barb through the cap | Silicone here is fine — it's small, and silicone peels off cleanly anyway |
-
-If the push-on cap weeps, wrap the pipe end in a couple of turns of self-amalgamating silicone tape
-before pushing it on. Still reversible.
-
-**A note on the epoxy.** It was never a glue — it's a brushed-on coating to seal the *porosity* of
-the print, and it doesn't bond the adaptor to anything. You may not need it at all: at 0.19 psi, a
-PETG print with 5+ perimeters is often gas-tight on its own. Test first. If it does weep, in
-increasing order of permanence:
-
-1. Reprint with more perimeters and a hotter nozzle — better layer bonding, no coating at all
-2. Acrylic spray sealer — thin, cheap, reversible enough
-3. Brushed epoxy or XTC-3D — the durable option, and still only a surface coat
-
-**If you'd rather have no external hardware**, the alternative is `cad/adaptor-socket.stl`: a socket
-that slips over the pipe with an O-ring or silicone seal. It's more compact and adds 0.33 L less
-dead volume, but you'd need a ~110 mm O-ring, and it's fiddlier to separate. The rubber joiner is
-the better trade for a rig you'll be reconfiguring.
-
----
-
-## Wire it
-
-**Driver → IBT-2 → Pico**
-
-| IBT-2 pin | Goes to |
-|---|---|
-| `B+` / `B−` | Bench supply at 12 V, **with the 2200 µF cap across these pins** |
-| `M+` / `M−` | Speaker terminals (8 Ω nominal, 6 Ω DC) |
-| `VCC` | Pico **3V3** (pin 36) — this is what makes 3.3 V logic register properly |
-| `GND` | Pico GND **and** supply ground |
-| `R_EN`, `L_EN` | Both to Pico 3V3 |
-| `RPWM` | GP16 |
-| `LPWM` | GP17 |
-
-GP16 and GP17 are channels A and B of the same PWM slice, so they share one 20 kHz carrier with
-independent duty — exactly what's wanted. PWM one and hold the other low to push the cone; swap them
-to pull. **Never drive both high** — that shorts the supply through the bridge.
-
-> **Keep the motor circuit off the breadboard.** Supply, driver and speaker carry 3–5 A; breadboards
-> and jumper wire are good for about 1 A before they heat up and the contacts degrade. Use the
-> IBT-2's screw terminals and proper cable for anything in that loop. Only the logic pins — `RPWM`,
-> `LPWM`, `R_EN`, `L_EN`, `VCC`, `GND` — should ever see a jumper lead.
-
-> **Use the motor driver, not an audio amplifier.** Audio amps deliberately block anything below
-> ~20 Hz. You're running at about 1 Hz, so an audio amp would throw away almost everything and make
-> the rig look like a total failure.
-
-**Pressure sensor → Pico**
-
-- Sensor: **VBUS** (pin 40, 5 V when the Pico is USB-powered) and GND.
-- Sensor output → **2:1 divider** (two 10 kΩ resistors) → **GP26** (ADC0).
-
-The divider isn't optional. The sensor runs on 5 V and swings 0.5–4.5 V; the Pico's ADC tops out at
-3.3 V. Halving gives 0.25–2.25 V, which fits with headroom even if the sensor rails.
-
-Resolution works out to about **0.012 mmHg per step**, and you can oversample on top of that. Nowhere
-near a limitation.
-
-Two things that will cost you an evening if you get them wrong:
-
-- **The sensor has two ports. Only one goes to the chamber**; the other must stay open to room air.
-  That's what makes the reading differential. Which port you pick sets the sign — if suction reads
-  positive, swap the tubes or flip the sign in software.
-- **Star-ground at the IBT-2.** The Pico is powered from your laptop's USB, and its ground now
-  connects to a circuit switching several amps. Run the motor ground straight back to the driver
-  rather than daisy-chaining it through the breadboard, or you'll see the switching noise in your
-  pressure trace and possibly drop the USB connection.
-
-**Optional: ADS1115 instead of the built-in ADC.** The Pico's ADC is a 12-bit SAR whose reference is
-the 3.3 V rail — the same rail sitting next to a motor driver switching several amps at 20 kHz. If
-the pressure trace looks noisier than the rig should be, swapping to the ADS1115 (16-bit, own
-reference, programmable gain) tells you immediately whether the noise is real or an artefact of
-measurement. Wire it 3V3 / GND / SDA→GP0 / SCL→GP1, with the same divider into A0.
-
-Start with the built-in ADC — fewer parts, faster to get going. Keep the ADS1115 in the drawer.
-
----
-
-## First power-up
-
-Do this in order. Each step isolates one thing, so when something misbehaves you know what it was.
-
-1. **Set the supply before anything is connected.** 12 V, current limit 4 A. Verify with a meter —
-   don't trust the front panel.
-
-2. **Test the driver with the speaker on the bench, out of the chamber.** Run a slow sine at low
-   amplitude and watch the cone. You're checking that the driver works, the direction reverses, and
-   nothing rubs. If it fails here it's electrical, and you don't want to be wondering whether it's a
-   leak.
-
-3. **Listen at the extremes.** Wind the amplitude up until you hear the coil bottom out — a dull
-   click at the excursion limit. Note the drive level where that starts and stay below it. That
-   figure is also your first real estimate of Xmax, which no datasheet gave you.
-
-4. **Now bolt it to the chamber** and repeat at low amplitude. Pressure should appear immediately.
-
-5. **Leak test before you interpret anything.**
-
-## Run it
-
-Generate a sine wave on the PWM pins, log the pressure, plot it.
-
-Then try:
-
-- **Slow sine, ~1 Hz.** How many mmHg? That's the headline number.
-- **Wind the amplitude up** until it stops improving.
-- **Sweep frequency**, 0.5 to 20 Hz, and find where it falls off.
-- **Fast step** — flip negative to positive as fast as you can. 50 ms is the target, since that's the
-  useful window in a heartbeat.
-- **Add pipe.** Glue on the coupling and another section. Pressure should drop in proportion. That's
-  the scaling law that lets you predict a leg-sized chamber.
-
-Two practical notes:
-
-- **If the sensor pins at ±15 mmHg**, good problem — add more pipe.
-- **Don't hold a steady offset for long.** At these speeds the coil behaves like a plain resistor and
-  pulls current while doing nothing, so it heats up. Short bursts are fine.
-
-Firmware is MicroPython on the Pico: hardware PWM for the carrier, a timer to step the waveform,
-`machine.ADC` for the sensor, and `print()` of CSV over USB serial. Capture on your laptop and plot
-there. Timing is deterministic, so the 50 ms step measurement and later ECG gating will both hold up
-— which a Linux host would not have.
-
----
-
-## Success looks like
-
-A clean, repeatable pressure swing of a few mmHg, behaving the way you'd expect when you change
+**Success** is a clean, repeatable swing of a few mmHg that behaves as expected when you change
 amplitude and tube length.
 
-If that works, the question becomes how it scales up — and you'll have real numbers instead of
-estimates.
+**The 45 L row is the real finding.** Not a failure — the scaling law being honest. A leg chamber
+needs roughly 1 litre of swept volume, about 6× this driver. Proving the physics at 5 L is what
+justifies spending real money on that actuator.
 
 ---
 
-## Where this goes next
-
-The architecture is already proven in a clinical device. The **SensorMedics 3100A** high-frequency
-oscillatory ventilator drives a **365 cc diaphragmatically sealed piston** with an electrical coil at
-3–15 Hz, producing over 90 cmH₂O (~66 mmHg) of swing — voice coil, sealed piston, both positive and
-negative pressure. It's been in neonatal ICUs for decades. Its 365 cc displacement is close to the
-~400 mL peak-to-peak needed for ±10 mmHg in a 15 L chamber.
-
-So phase 2, once this rig gives you real numbers, is a bigger actuator on a bought diaphragm:
-
-- **Actuator:** H2W `NCM08-25-100-2LB` — 19.1 mm stroke, 45 N continuous / 134 N peak, integrated
-  ball bushing bearing. Price on application; these are quote-only industrial parts.
-- **Diaphragm:** don't fabricate one. A **speaker passive radiator** is a rigid piston plus a rubber
-  rolling seal plus a bolt-on frame, with no motor — AU$12–62 in 8" to 15". Bolt the actuator shaft
-  to the centre. A 200 mm diaphragm at 19.1 mm stroke sweeps about 600 mL, which is right in range.
-
----
-
-## Later (not now)
+## Later
 
 Thigh seal · ECG gating · measuring anything physiological · anything involving a person.
