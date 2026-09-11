@@ -54,36 +54,46 @@ oscillometry use a loudspeaker as a calibrated pressure source. Same job, smalle
 
 ## Bill of materials
 
-**≈ AU$57 of it is one AliExpress order** (Pico, driver, sensor, ADC, breadboard, resistors,
-capacitor, barb, tubing — all placed together). The rest is local: driver, PVC, adhesives, cable.
-**Total ≈ AU$250.**, assuming you already have a bench power supply and a 3D printer.
+**Total ≈ AU$320**, assuming you already have a bench power supply, a 3D printer and a micro-USB
+cable. Split into one AliExpress order and a local run.
+
+Prices are what an existing AliExpress account actually pays. Signed out, the site quotes much lower
+"new shopper" prices that evaporate at checkout — don't plan around them.
+
+### AliExpress — one order, ≈ AU$131 delivered
+
+| Item | What it's for | Price |
+|---|---|---:|
+| [**MPXV7002DP breakout**](https://www.aliexpress.com/item/1005007057842984.html) — ±2 kPa (±15 mmHg) differential, barbed ports | Measures chamber pressure against room air — the one number the whole rig exists to produce | $19.19 + $4.33 ship |
+| [**IBT-2 / BTS7960**](https://www.aliexpress.com/item/1005009194435701.html) — H-bridge motor driver | Drives the coil both directions at frequencies an audio amp can't reach | $17.29 + $8.32 ship |
+| [**Raspberry Pi Pico 2**](https://www.aliexpress.com/item/1005008058623788.html) (variant "Pico 2-Solder") | Runs everything: drive waveform, pressure logging, CSV over USB | $17.09 |
+| [**Clear silicone tube**](https://www.aliexpress.com/item/1005008350652653.html), OD5 × ID3 mm, 3 m | Bulkhead to sensor. 3 mm ID grips the sensor's ~3.2 mm barb and still stretches onto the 4 mm bulkhead. Clear so condensation in the line is visible | $9.19 |
+| [**830-point breadboard**](https://www.aliexpress.com/item/1005003647931024.html) | The divider and sensor. **Logic side only** — see Wire it | $8.39 |
+| [**Red/black silicone cable**](https://www.aliexpress.com/item/1005009192506490.html), 18 AWG, 3 m | Driver to motor driver. Carries 3–5 A, so not jumper wire | $7.22 |
+| [**Resistor kit**](https://www.aliexpress.com/item/1005011772534173.html), 600 pcs, 30 values 10 Ω–1 MΩ | You need two 10 kΩ for the divider; the kit costs less than buying two locally | $6.69 |
+| [**ADS1220**](https://www.aliexpress.com/item/1005012498259780.html) — 24-bit I²C ADC *(optional)* | Not needed, the Pico has ADCs. But 24-bit with a PGA makes it the better tiebreaker if the built-in ADC looks noisy next to the driver | $6.09 |
+| [**Dupont jumper set**](https://www.aliexpress.com/item/1005002349042216.html), 120 pcs, 20 cm, M-M/M-F/F-F | Pico GPIO to the driver's logic pins and the sensor. The breadboard is useless without these | $5.45 + $5.65 ship |
+| [**2200 µF 35 V electrolytic**](https://www.aliexpress.com/item/1005011811368397.html) (pack of 10) | Across the motor driver's supply. **Don't skip it** — see Power supply | $5.45 |
+| [**ADS1115**](https://www.aliexpress.com/item/1005012498259780.html) — 16-bit I²C ADC *(optional)* | Same job as the ADS1220, lower resolution. One of the two is plenty | $4.49 |
+| [**4 mm brass bulkhead hose barb**](https://www.aliexpress.com/item/33041152234.html) | Through a drilled hole in the end cap — barb inside, barb outside, nut clamps it | $0.52 + $7.40 ship |
+
+### Local — ≈ AU$190
 
 | Item | What it's for | Where | Price |
 |---|---|---|---:|
-| **Jaycar CW2196** — 8" woofer, 8 Ω, Fs 28.1 Hz, Re 6.0 Ω, 90 W | **The actuator.** A speaker is a voice coil with the piston and gas seal already built in | [Jaycar CW2196](https://www.jaycar.com.au/woofer-speaker-driver-8-inch/p/CW2196) | $44.95 |
-| **MPXV7002DP breakout** — ±2 kPa (±15 mmHg) differential, barbed ports | Measures chamber pressure against room air — the one number the whole rig exists to produce | [AliExpress](https://www.aliexpress.com/item/1005007057842984.html) | $20.19 |
-| **Raspberry Pi Pico 2** (headers soldered) | Runs everything: generates the drive waveform, reads the pressure, streams CSV over USB | [AliExpress](https://www.aliexpress.com/item/1005008058623788.html) · [Core Electronics](https://core-electronics.com.au/) | $5.94–17 |
-| **ADS1115** — 16-bit I²C ADC *(optional)* | Not needed — the Pico has ADCs. Worth $2 as a fallback if the built-in one proves noisy next to the motor driver | [AliExpress](https://www.aliexpress.com/item/1005012498259780.html) | $1.99 |
-| **IBT-2 / BTS7960** — H-bridge motor driver | Drives the coil in both directions at frequencies an audio amp can't reach | [AliExpress](https://www.aliexpress.com/item/1005009194435701.html) | $17.29 |
+| **Jaycar CW2196** — 8" woofer, 8 Ω, Fs 28.1 Hz, Re 6.0 Ω, 90 W | **The actuator.** A speaker is a voice coil with the piston and gas seal already built in | [Jaycar](https://www.jaycar.com.au/woofer-speaker-driver-8-inch/p/CW2196) | $44.95 |
 | **Holman 100mm × 3m PVC DWV pipe** | The chamber. 85 mL per cm, so 800 mm ≈ 6.7 L | [Bunnings](https://www.bunnings.com.au/holman-100mm-x-3m-pvc-dwv-pipe_p4770345) | $33.65 |
-| **Holman 100mm PVC DWV push-on cap** × 2 | Seals the far end; one gets drilled for the sensor port | [Bunnings](https://www.bunnings.com.au/search/products?q=Holman+100mm+PVC+DWV+Push+On+Cap) | $7.80 |
-| **Deks 100mm PVC-to-PVC rubber joiner** × 2 | **Every joint in the rig, reversibly.** A rubber sleeve with two hose clamps — joins the adaptor to the pipe, and pipe sections to each other. Undo two clamps to change the chamber volume | [Bunnings](https://www.bunnings.com.au/deks-100mm-pvc-to-pvc-rubber-joiner_p4730112) | $21.00 |
-| **Protek 250ml Type N PVC cement** | Glues pipe joints — solvent-welded joints don't leak | [Bunnings](https://www.bunnings.com.au/search/products?q=Protek+Type+N+PVC+Cement+Non+Pressure) | $8.42 |
-| **Protek 125ml priming fluid** | Preps the PVC so the cement actually bonds | [Bunnings](https://www.bunnings.com.au/search/products?q=Protek+Red+Priming+Fluid) | $6.68 |
-| **Neutral-cure silicone sealant** | Seals the sensor port and anything not solvent-welded | [Bunnings](https://www.bunnings.com.au/search/products?q=neutral+cure+silicone+sealant) | $12 |
-| **Two-part epoxy** | Brushed over the printed adaptor — FDM prints leak through layer lines even when they look solid | [Bunnings](https://www.bunnings.com.au/search/products?q=two+part+epoxy+resin) | $20 |
-| **PETG or PLA filament** (~300 g) | The adaptor, from `cad/adaptor.stl` | you have this | — |
-| **4 mm brass bulkhead hose barb** | Through a drilled hole in the end cap — barb inside, barb outside, nut clamps it. Seal with silicone | [AliExpress](https://www.aliexpress.com/item/33041152234.html) | $0.52 |
-| **Clear silicone tube, OD5 × ID3 mm, 3 m** | Bulkhead to sensor. 3 mm ID grips the sensor's ~3.2 mm barb and stretches onto the 4 mm bulkhead. Clear so you can see condensation collecting | [AliExpress](https://www.aliexpress.com/item/1005008350652653.html) | $1.99 |
-| **M4 bolts + closed-cell foam gasket** | Bolts the driver to the printed adaptor, gasket makes it airtight | [Bunnings](https://www.bunnings.com.au/search/products?q=M4+bolts) | $15 |
-| **60 mL syringe** | Injects a known volume for the leak test and to calibrate the sensor | [Bunnings](https://www.bunnings.com.au/search/products?q=60ml+syringe) | $5 |
-| **2200 µF 35 V electrolytic** (pack of 10) | Sits across the motor driver's supply. **Don't skip it** — see below | [AliExpress](https://www.aliexpress.com/item/1005011811368397.html) | $1.99 |
-| **Resistor kit**, 600 pcs, 30 values 10 Ω–1 MΩ | You need two 10 kΩ for the divider; the kit costs the same as buying two | [AliExpress](https://www.aliexpress.com/item/1005011772534173.html) | $1.99 |
-| **Figure-8 speaker cable**, 16–18 AWG, a few metres | Driver to motor driver. It carries 3–5 A, so not jumper wire | [Jaycar](https://www.jaycar.com.au/search?text=figure%208%20speaker%20cable) | $8 |
-| **Spade connectors** to suit the driver terminals | Onto the speaker tabs, unless you'd rather solder | [Jaycar](https://www.jaycar.com.au/search?text=spade%20connectors) | $5 |
-| **Female-female jumper leads** | Pico GPIO to the driver's logic pins and the sensor | [Jaycar](https://www.jaycar.com.au/search?text=jumper%20leads%20female) | $8 |
-| **830-point breadboard** | The divider and sensor. **Logic side only** — see the warning in Wire it | [AliExpress](https://www.aliexpress.com/item/1005003647931024.html) | $1.99 |
+| **Deks 100mm PVC-to-PVC rubber joiner** × 2 | **Every joint, reversibly.** Rubber sleeve with two hose clamps. Undo the clamps to change chamber volume | [Bunnings](https://www.bunnings.com.au/deks-100mm-pvc-to-pvc-rubber-joiner_p4730112) | $21.00 |
+| **Two-part epoxy** | Sealing the printed adaptor if it weeps — FDM prints leak through layer lines | [Bunnings](https://www.bunnings.com.au/search/products?q=two+part+epoxy+resin) | $20 |
+| **M4 bolts + closed-cell foam gasket** | Bolts the driver to the adaptor, gasket makes it airtight | [Bunnings](https://www.bunnings.com.au/search/products?q=M4+bolts) | $15 |
+| **Neutral-cure silicone sealant** | Seats the bulkhead barb and anything not solvent-welded. Not worth shipping from China | [Bunnings](https://www.bunnings.com.au/search/products?q=neutral+cure+silicone+sealant) | $12 |
 | **2 × pipe saddle clips**, or a G-clamp | Holds the rig down. 29 N oscillating at 1 Hz will walk a 1 m pipe across the bench | [Bunnings](https://www.bunnings.com.au/search/products?q=100mm+pipe+saddle+clip) | $12 |
+| **Protek 250ml Type N PVC cement** | The PVC-to-PVC joints. Does **not** bond to PLA or PETG | [Bunnings](https://www.bunnings.com.au/search/products?q=Protek+Type+N+PVC+Cement+Non+Pressure) | $8.42 |
+| **Holman 100mm PVC DWV push-on cap** × 2 | Seals the far end; one gets drilled for the sensor port | [Bunnings](https://www.bunnings.com.au/search/products?q=Holman+100mm+PVC+DWV+Push+On+Cap) | $7.80 |
+| **Protek 125ml priming fluid** | Preps the PVC so the cement bonds | [Bunnings](https://www.bunnings.com.au/search/products?q=Protek+Red+Priming+Fluid) | $6.68 |
+| **Spade connectors** to suit the driver terminals | Onto the speaker tabs, unless you'd rather solder | [Jaycar](https://www.jaycar.com.au/search?text=spade%20connectors) | $5 |
+| **60 mL syringe** | Known volume for the leak test and sensor calibration | [Bunnings](https://www.bunnings.com.au/search/products?q=60ml+syringe) | $5 |
+| **PETG or PLA filament** (~300 g) | The adaptor, from `cad/adaptor-spigot.stl` | you have this | — |
 
 Notes on a few of these:
 
@@ -98,6 +108,10 @@ Notes on a few of these:
   and that stiffness is where the current demand below comes from.
 - **3 m of pipe** is far more than the 800 mm you start with, deliberately: the spare lets you extend
   the chamber and watch the pressure fall off, which is the measurement that justifies scaling up.
+- **Only one ADC is needed, if any.** The Pico has three built in. Both the ADS1115 and ADS1220 are
+  listed because they're a few dollars and settle an argument you can't otherwise win: when the first
+  pressure trace looks noisy, is that the rig or the measurement? Swapping in an external ADC with its
+  own reference answers it in ten minutes.
 
 ### Power supply
 
