@@ -4,8 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Status
 
-No code yet. No build, test, or run commands exist — do not invent them; update this file once the
-first firmware lands.
+Firmware is MicroPython (v1.29, `RPI_PICO2` build) in `src/firmware/`, driven by `mpremote`
+(`pipx install mpremote`). All code lives under `src/`. Tasks are in `src/justfile` (`just` finds it
+from anywhere under `src/`; `just --list` shows them). No tests yet.
+
+- `just run` — mounts `firmware/` on the board and imports `main`; nothing is written to flash
+- `just deploy` — copies `firmware/` to flash and resets, so it runs standalone on power-up
+- `just repl` / `just reset` / `just wipe` (deletes deployed `.py` files from flash)
 
 **Controller is a Raspberry Pi Pico 2, not a Pi 4** — it has built-in ADCs and deterministic timing.
 

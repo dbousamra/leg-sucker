@@ -1,0 +1,27 @@
+# Pico 2 dev loop. Requires mpremote (`pipx install mpremote`).
+# mpremote auto-detects the board; override with `PORT=/dev/cu.usbmodemXXXX just run`.
+
+mpremote := "mpremote" + if env("PORT", "") != "" { " connect " + env("PORT") } else { "" }
+
+default:
+    @just --list
+
+# Run firmware/main.py without writing to flash (firmware/ is mounted, so local imports resolve). Ctrl-C to stop.
+run:
+    {{mpremote}} mount firmware exec "import main"
+
+# Copy firmware/ to flash and reset, so it runs standalone on power-up
+deploy:
+    {{mpremote}} cp -r firmware/. : + reset
+
+# Open an interactive REPL on the board
+repl:
+    {{mpremote}} repl
+
+# Restart the board
+reset:
+    {{mpremote}} reset
+
+# Delete deployed .py files from flash so the board boots to a bare REPL
+wipe:
+    {{mpremote}} exec "import os; [os.remove(f) for f in os.listdir() if f.endswith('.py')]"
